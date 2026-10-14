@@ -114,11 +114,11 @@ const MiB = 1024 * 1024;
     const store = new S3ChunkStore(isolated({ listPageSize: 2 }).config);
     await store.onModuleInit();
     const ids = [
-      '3Nk1x9Wd5gUWvkR8f5zXfWgL8Wb7mEyW6jJtTK3hz3qA',
-      '4fYNw3dojWmQ4dXtSGE9epjRGy9pFSx62YypT7avPYvA',
-      '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
-      'E2fDdT3enSsrzgEfKkYhc6zSQ1fNDZmKZpkLToD9igK1',
-      'SysvarRent111111111111111111111111111111111',
+      '0x3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a',
+      '0x4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f',
+      '0x9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c',
+      '0xe2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2',
+      '0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e',
     ];
     for (const id of ids) await store.putChunk(id, Buffer.from(`bytes of ${id}`));
 

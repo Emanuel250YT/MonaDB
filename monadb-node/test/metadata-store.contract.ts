@@ -103,7 +103,7 @@ export function describeMetadataStore(
       expect(loaded.uploadedAt).toBeInstanceOf(Date);
       expect(loaded.confirmedAt).toBeInstanceOf(Date);
       expect(await reopened.countChunks()).toBe(1);
-      expect(await reopened.getChunk('Missing111111111111111111111111111111111111')).toBeNull();
+      expect(await reopened.getChunk('0x0000000000000000000000000000000000000000000000000000000000000001')).toBeNull();
     });
 
     it('keeps u64 rewards and replicator lists intact', async () => {
@@ -150,7 +150,7 @@ export function describeMetadataStore(
       const r = chunkRecord();
       await store.upsertChunk(r);
       await store.updateChunkState(r.chunkId, { state: 'Cool', confirmedReplicas: 1 });
-      await store.updateChunkState('UnknownChunk1111111111111111111111111111111', { state: 'Closed' });
+      await store.updateChunkState('0x0000000000000000000000000000000000000000000000000000000000000002', { state: 'Closed' });
 
       const loaded = await store.getChunk(r.chunkId);
       expect(loaded).toMatchObject({ state: 'Cool', confirmedReplicas: 1, reclaimed: false, replicators: [] });

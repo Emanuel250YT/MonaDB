@@ -14,8 +14,8 @@ import {
  * describeBlobStore.
  */
 
-export const BLOB = '7qinSLNiY9z55KPHLXa9TJFwsUMJrqotwMu4ZXBaiNv';
-export const OTHER_BLOB = 'E2fDdT3enSsrzgEfKkYhc6zSQ1fNDZmKZpkLToD9igK1';
+export const BLOB = '0xb1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1';
+export const OTHER_BLOB = '0xe2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2';
 
 export const BAD_KEYS = [
   '',
