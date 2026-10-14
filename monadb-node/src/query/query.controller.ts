@@ -1,0 +1,129 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Res,
+  UsePipes,
+  ValidationPipe,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
+import { QueryService } from './query.service';
+import { QueryDto } from './dto/query.dto';
+
+/**
+ * QueryController
+ *
+ * REST API for querying the MonaDB network from this replicator node.
+ * Chunk ids are keccak256 ids (0x + 64 hex).
+ *
+ * Endpoints:
+ *   GET  /status                    — node health, replicator registration, scan stats
+ *   POST /query                     — JSON query language (filter, sort, page)
+ *   GET  /chunk/:chunkId/meta       — local metadata, else the on-chain chunk
+ *   GET  /chunk/:chunkId/data       — raw binary data (served as octet-stream)
+ *   PUT  /chunk/:chunkId/data       — push a direct chunk (raw bytes, ≤ 16 MiB)
+ */
+@ApiTags('MonaDB')
+@Controller()
+export class QueryController {
+  constructor(private readonly queryService: QueryService) { }
+
+  // ── Node status ─────────────────────────────────────────────────────────────
+
+  @Get('status')
+  @ApiOperation({ summary: 'Node health, replicator registration, balance and scan stats' })
+  async getStatus() {
+    return this.queryService.getNodeStatus();
+  }
+
+  // ── JSON query language ─────────────────────────────────────────────────────
+
+  /**
+   * Execute a structured JSON query against the local metadata store.
+   *
+   * Example body:
+   * ```json
+   * {
+   *   "filter": { "owner": "0x7099…", "state": "Cool" },
+   *   "orderBy": "uploadedAt",
+   *   "order": "desc",
+   *   "limit": 20,
+   *   "offset": 0
+   * }
+   * ```
+   */
+  @Post('query')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  @ApiOperation({ summary: 'JSON query for stored chunks' })
+  @ApiResponse({ status: 200, description: 'Array of matching chunk records' })
+  async query(@Body() dto: QueryDto) {
+    const results = await this.queryService.query(dto);
+    return { count: results.length, data: results };
+  }
+
+  // ── Chunk endpoints ─────────────────────────────────────────────────────────
+
+  @Get('chunk/:chunkId/meta')
+  @ApiOperation({ summary: 'Get metadata for a specific chunk' })
+  @ApiParam({ name: 'chunkId', description: 'Chunk id (0x + 64 hex)' })
+  async getChunkMeta(@Param('chunkId') chunkId: string) {
+    return this.queryService.getChunkMeta(chunkId);
+  }
+
+  @Get('chunk/:chunkId/data')
+  @ApiOperation({ summary: 'Download raw binary chunk data' })
+  @ApiParam({ name: 'chunkId', description: 'Chunk id (0x + 64 hex)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Raw bytes as application/octet-stream',
+  })
+  @ApiResponse({ status: 404, description: 'This node does not store the chunk' })
+  async getChunkData(
+    @Param('chunkId') chunkId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const data = await this.queryService.getChunkData(chunkId);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${chunkId}.bin"`);
+    res.setHeader('X-Chunk-Id', chunkId);
+    res.setHeader('Content-Length', data.length);
+    res.send(data);
+  }
+
+  /**
+   * Uploaders send each direct chunk here (raw encrypted bytes).  The node
+   * keeps it only when it matches a direct chunk of the contract that still
+   * needs replicas (size + sha256), then confirms it on-chain.
+   */
+  @Put('chunk/:chunkId/data')
+  @ApiOperation({ summary: 'Push a direct chunk (raw encrypted bytes, at most 16 MiB)' })
+  @ApiParam({ name: 'chunkId', description: 'Chunk id (0x + 64 hex)' })
+  @ApiConsumes('application/octet-stream')
+  @ApiBody({ schema: { type: 'string', format: 'binary' } })
+  @ApiResponse({
+    status: 201,
+    description: 'Stored by this push: { stored, confirmed, signature?, reason? } (reason: why it is not confirmed)',
+  })
+  @ApiResponse({ status: 200, description: 'This node already confirmed the chunk: { stored: true, confirmed: true }' })
+  @ApiResponse({ status: 400, description: 'Size or sha256 does not match the on-chain chunk' })
+  @ApiResponse({ status: 403, description: 'The owner is not in REPLICATE_OWNERS' })
+  @ApiResponse({ status: 404, description: 'No such chunk (yet: retry shortly after the upload transaction)' })
+  @ApiResponse({ status: 409, description: 'Not a direct chunk, reclaimed, or it needs no more replicas' })
+  @ApiResponse({ status: 413, description: 'Larger than 16 MiB' })
+  async pushChunkData(
+    @Param('chunkId') chunkId: string,
+    @Body() body: Buffer,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { status, ...result } = await this.queryService.pushChunkData(chunkId, body);
+    res.status(status);
+    return result;
+  }
+}

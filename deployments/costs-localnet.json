@@ -1,0 +1,151 @@
+{
+  "measuredAt": "2026-10-14T01:29:06.995Z",
+  "gasPriceGwei": 100,
+  "monUsd": 0.02,
+  "config": {
+    "treasury": "0x891D30005087bd8a569a24D6E57BD9c2Bc955808",
+    "baseFeePerReplica": "20000000000000000",
+    "pricePerMib": "100000000000000000",
+    "pricePerMibEpoch": "1000000000000000",
+    "protocolFeeBps": 1000,
+    "replicationThresholdPct": 60,
+    "replicationWindow": "604800",
+    "epochSeconds": "2592000",
+    "challengeWindowBlocks": "200",
+    "challengeCooldown": "3600",
+    "challengerBountyBps": 1000
+  },
+  "operations": {
+    "registerIdentity": "67817"
+  },
+  "files": [
+    {
+      "file": "100 KiB",
+      "mode": "direct",
+      "chunks": 1,
+      "segmentTxs": 0,
+      "uploadFee": "59536590576171876",
+      "gas": "568746",
+      "gasAtMonadPrice": "56874600000000000",
+      "totalAtMonadPrice": "116411190576171876",
+      "seconds": 0.118
+    },
+    {
+      "file": "100 KiB",
+      "mode": "ledger",
+      "chunks": 1,
+      "segmentTxs": 3,
+      "uploadFee": "59536590576171876",
+      "gas": "4637505",
+      "gasAtMonadPrice": "463750500000000000",
+      "totalAtMonadPrice": "523287090576171876",
+      "seconds": 0.567
+    },
+    {
+      "file": "1024 KiB",
+      "mode": "direct",
+      "chunks": 1,
+      "segmentTxs": 0,
+      "uploadFee": "240005340576171876",
+      "gas": "517446",
+      "gasAtMonadPrice": "51744600000000000",
+      "totalAtMonadPrice": "291749940576171876",
+      "seconds": 0.125
+    },
+    {
+      "file": "1024 KiB",
+      "mode": "ledger",
+      "chunks": 1,
+      "segmentTxs": 22,
+      "uploadFee": "240005340576171876",
+      "gas": "42802696",
+      "gasAtMonadPrice": "4280269600000000000",
+      "totalAtMonadPrice": "4520274940576171876",
+      "seconds": 3.889
+    },
+    {
+      "file": "10240 KiB",
+      "mode": "direct",
+      "chunks": 2,
+      "segmentTxs": 0,
+      "uploadFee": "2080010681152343752",
+      "gas": "755035",
+      "gasAtMonadPrice": "75503500000000000",
+      "totalAtMonadPrice": "2155514181152343752",
+      "seconds": 0.501
+    },
+    {
+      "file": "10240 KiB",
+      "mode": "ledger",
+      "chunks": 10,
+      "segmentTxs": 220,
+      "uploadFee": "2400053405761718760",
+      "gas": "425568183",
+      "gasAtMonadPrice": "42556818300000000000",
+      "totalAtMonadPrice": "44956871705761718760",
+      "seconds": 35.051
+    }
+  ],
+  "blobs": [
+    {
+      "file": "1 MiB",
+      "code": "2+1",
+      "fragmentKiB": 16,
+      "blobs": 1,
+      "storedMiB": 1.546875,
+      "storageFee": "78562500000000000",
+      "gas": "552745",
+      "gasAtMonadPrice": "55274500000000000"
+    },
+    {
+      "file": "1 MiB",
+      "code": "10+4",
+      "fragmentKiB": 8,
+      "blobs": 1,
+      "storedMiB": 1.421875,
+      "storageFee": "297062500000000000",
+      "gas": "518557",
+      "gasAtMonadPrice": "51855700000000000"
+    },
+    {
+      "file": "100 MiB",
+      "code": "2+1",
+      "fragmentKiB": 1024,
+      "blobs": 1,
+      "storedMiB": 153,
+      "storageFee": "1896000000000000000",
+      "gas": "518569",
+      "gasAtMonadPrice": "51856900000000000"
+    },
+    {
+      "file": "100 MiB",
+      "code": "10+4",
+      "fragmentKiB": 512,
+      "blobs": 1,
+      "storedMiB": 147,
+      "storageFee": "2044000000000000000",
+      "gas": "518545",
+      "gasAtMonadPrice": "51854500000000000"
+    },
+    {
+      "file": "1 GiB",
+      "code": "2+1",
+      "fragmentKiB": 1024,
+      "blobs": 1,
+      "storedMiB": 1539,
+      "storageFee": "18528000000000000000",
+      "gas": "518569",
+      "gasAtMonadPrice": "51856900000000000"
+    },
+    {
+      "file": "1 GiB",
+      "code": "10+4",
+      "fragmentKiB": 1024,
+      "blobs": 1,
+      "storedMiB": 1442,
+      "storageFee": "17584000000000000000",
+      "gas": "518557",
+      "gasAtMonadPrice": "51855700000000000"
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Encrypted files on Monad, replicated by paid nodes and readable only by the people you choose." />
+    <meta name="theme-color" content="#fbfaf9" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>MonaDB Vault</title>
+    <script>
+      document.documentElement.classList.add('js');
+    </script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="#top" aria-label="MonaDB home">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          MonaDB
+        </a>
+        <nav class="topnav" aria-label="Sections">
+          <a href="#how">How it works</a>
+          <a href="#vault">Vault</a>
+          <a href="#benefits">Benefits</a>
+        </nav>
+        <div class="topbar-right">
+          <span class="network" id="network"></span>
+          <button class="button button-outline" id="account" type="button">Connect wallet</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-sky" aria-hidden="true">
+          <span class="art-sun-wrap" data-art="sun"></span>
+          <span class="art-cloud c1" data-art="cloud"></span>
+          <span class="art-cloud c2" data-art="cloud"></span>
+          <span class="art-cloud c3" data-art="cloud"></span>
+          <span class="art-cloud c4" data-art="cloud"></span>
+          <span class="art-cloud c5" data-art="cloud"></span>
+          <span class="art-plane" data-art="plane"></span>
+          <span class="art-balloon b1" data-art="balloon"></span>
+          <span class="art-balloon b2" data-art="balloon"></span>
+        </div>
+        <div class="hero-copy">
+          <h1 id="hero-title">Private files, effortless on Monad</h1>
+          <p class="lede">Encrypted in your browser, kept by paid nodes and readable only by the wallets you choose.</p>
+          <a class="button button-hero" href="#vault">Open your vault</a>
+        </div>
+        <div class="hero-city" data-art="skyline"></div>
+      </section>
+
+      <section class="band" aria-label="Highlights">
+        <ul class="band-list">
+          <li>
+            <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="14" width="18" height="13" rx="2" /><path d="M11 14v-4a5 5 0 0 1 10 0v4M16 19v3" /></svg>
+            Encrypted before it leaves your browser
+          </li>
+          <li>
+            <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="6" /><path d="M16 13.5v5M27 16a11 11 0 1 1-3.2-7.8M27 5v4h-4" /></svg>
+            One signature per upload, paid in MON
+          </li>
+          <li>
+            <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="7" r="3" /><circle cx="6" cy="24" r="3" /><circle cx="26" cy="24" r="3" /><path d="M14.5 9.6L7.5 21.4M17.5 9.6l7 11.8M9 24h14" /></svg>
+            Kept by paid nodes, checked on Monad
+          </li>
+        </ul>
+      </section>
+
+      <section class="section" id="how" aria-labelledby="how-title">
+        <h2 class="eyebrow" id="how-title" data-reveal>3 easy steps</h2>
+        <p class="section-lede" data-reveal>No accounts and no subscriptions: your wallet is your login, and the key that opens your files is derived from it.</p>
+        <ol class="cards" data-reveal>
+          <li class="card">
+            <span class="card-art" data-art="step-wallet"></span>
+            <h3>Connect and unlock</h3>
+            <p>Connect MetaMask, Rabby or any EVM wallet and sign one message. Your encryption key is made in this tab and never leaves it.</p>
+          </li>
+          <li class="card">
+            <span class="card-art" data-art="step-upload"></span>
+            <h3>Upload privately</h3>
+            <p>Each file is compressed, encrypted and split into shards that paid nodes keep. You approve it once.</p>
+          </li>
+          <li class="card">
+            <span class="card-art" data-art="step-share"></span>
+            <h3>Share and recover</h3>
+            <p>Give another wallet access and send the link. They open it with their own key, from any device.</p>
+          </li>
+        </ol>
+        <a class="button button-hero" href="#vault" data-reveal>Start now</a>
+      </section>
+
+      <section class="section vault" id="vault" aria-labelledby="vault-title">
+        <h2 class="eyebrow" id="vault-title">Your vault</h2>
+        <p class="section-lede">Everything happens here, on <span id="vault-network">Monad</span>.</p>
+
+        <div id="notice" class="notice" role="alert" hidden></div>
+        <div id="open-request" class="request" hidden></div>
+
+        <ol class="steps">
+          <li class="step" id="step-identity">
+            <h3>Your wallet and key</h3>
+            <div class="step-body" id="identity"></div>
+          </li>
+          <li class="step" id="step-upload">
+            <h3>Upload a file</h3>
+            <div class="step-body" id="upload"></div>
+          </li>
+          <li class="step" id="step-files">
+            <h3>
+              Your files
+              <span class="legend">
+                <span><span class="dot dot-hot"></span> Hot: waiting for replicas</span>
+                <span><span class="dot dot-cool"></span> Cool: replicated</span>
+              </span>
+            </h3>
+            <div class="step-body" id="files"></div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section" id="benefits" aria-labelledby="benefits-title">
+        <h2 class="eyebrow" id="benefits-title" data-reveal>More benefits</h2>
+        <ul class="benefits" data-reveal>
+          <li class="benefit" tabindex="0">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="4" width="10" height="10" rx="2" /><rect x="18" y="4" width="10" height="10" rx="2" /><rect x="4" y="18" width="10" height="10" rx="2" /><rect x="18" y="18" width="10" height="10" rx="2" stroke-dasharray="3 3" /></svg>
+            <h3>Erasure coded</h3>
+            <p>Any k of the n shards rebuild your file, so it survives lost nodes.</p>
+          </li>
+          <li class="benefit" tabindex="0">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3l11 4v8c0 7-5 12-11 14C10 27 5 22 5 15V7z" /><path d="M11 16l4 4 7-8" /></svg>
+            <h3>Storage proofs</h3>
+            <p>Nodes answer random challenges on Monad to get paid. A missing shard costs them.</p>
+          </li>
+          <li class="benefit" tabindex="0">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="6" /><path d="M16 13.5v5M27 16a11 11 0 1 1-3.2-7.8M27 5v4h-4" /></svg>
+            <h3>Escrow comes back</h3>
+            <p>What the nodes did not earn returns to you: unfilled copies, abandoned uploads, unused storage.</p>
+          </li>
+          <li class="benefit" tabindex="0">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="6" y="3" width="20" height="26" rx="2" /><path d="M10 9h12M10 14h12M10 19h7M19 23h3" /></svg>
+            <h3>Exact quotes</h3>
+            <p>See the storage fee, the gas and the total in MON before you sign anything.</p>
+          </li>
+          <li class="benefit" tabindex="0">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 4h10l6 6v18H9z" /><path d="M19 4v6h6M5 8v22h16" /></svg>
+            <h3>Up to 1 GiB a file</h3>
+            <p>Big files are split into blobs and shards, and every piece is checked on the way back.</p>
+          </li>
+          <li class="benefit" tabindex="0">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="8" cy="13" r="3.5" /><path d="M2 27c0-4.5 2.7-7.5 6-7.5s6 3 6 7.5" /><circle cx="24" cy="13" r="3.5" /><path d="M18 27c0-4.5 2.7-7.5 6-7.5s6 3 6 7.5" /><path d="M12 5h8m-2.5-2.5L20 5l-2.5 2.5" /></svg>
+            <h3>Wallet-to-wallet sharing</h3>
+            <p>Seal the file key to another wallet, send the link and revoke access any time.</p>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <details class="replicators" id="replicators">
+          <summary>Replicator nodes</summary>
+          <ul class="replicator-list" id="replicator-list"></ul>
+        </details>
+        <form id="node-form" class="node-form">
+          <label for="node-url">Preferred node</label>
+          <input id="node-url" name="node-url" type="url" placeholder="Optional, e.g. http://localhost:3000" spellcheck="false" />
+          <button class="button button-quiet" type="submit">Save</button>
+        </form>
+        <p id="contracts" class="contracts"></p>
+      </div>
+    </footer>
+
+    <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

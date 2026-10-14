@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx hardhat compile
+      # contract tests on the Hardhat network
+      - run: npx hardhat test
+      - name: The ABI in the SDK matches the compiled contract
+        run: npm run export-abi && git diff --exit-code sdk/src/abi sdk/src/deployments.ts
+
+  sdk-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx hardhat compile
+      - name: Local Hardhat node (one block per second, like a live chain)
+        run: |
+          npx hardhat node > hardhat-node.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -s -X POST -H 'content-type: application/json' \
+              --data '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}' http://127.0.0.1:8545 && exit 0
+            sleep 1
+          done
+          cat hardhat-node.log
+          exit 1
+      - run: npm run build:sdk
+      # SDK unit tests + end-to-end tests against the Hardhat node (each run deploys its own contract)
+      - run: npm run test:sdk
+      - run: npm run app:build
+
+  node:
+    runs-on: ubuntu-latest
+    # rocksdb's prebuilt binary crashes on recent glibc (ubuntu-latest) and its
+    # sources no longer compile with GCC 13+, so build on Debian bookworm
+    container: node:22-bookworm
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run build:sdk
+      - run: npm ci
+        working-directory: monadb-node
+      - run: npm run build && npm test
+        working-directory: monadb-node
+
+  # S3 / Postgres drivers against a real S3 server and Postgres
+  # (monadb-node/test/storage-integration.spec.ts)
+  node-storage:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: monadb
+          POSTGRES_PASSWORD: monadb-ci
+          POSTGRES_DB: monadb
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U monadb -d monadb"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgres://monadb:monadb-ci@localhost:5432/monadb
+      S3_ENDPOINT: http://localhost:9000
+      S3_REGION: us-east-1
+      S3_FORCE_PATH_STYLE: "true"
+      S3_BUCKET: monadb-ci
+      S3_ACCESS_KEY_ID: monadb-ci
+      S3_SECRET_ACCESS_KEY: monadb-ci-secret
+    steps:
+      - uses: actions/checkout@v4
+      # An S3-compatible server (moto; MinIO no longer publishes its images)
+      - name: Start an S3 server
+        run: |
+          docker run -d --name s3 -p 9000:5000 motoserver/moto:5.2.3
+          for i in $(seq 1 60); do
+            curl -s -o /dev/null http://localhost:9000/ && exit 0
+            sleep 1
+          done
+          docker logs s3
+          exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            monadb-node/package-lock.json
+      - run: npm ci && npm run build:sdk
+      # --ignore-scripts skips rocksdb's native install, which these drivers never load
+      - run: npm ci --ignore-scripts
+        working-directory: monadb-node
+      # Creates the bucket, works under a random prefix / schema, cleans up
+      - run: npx jest --ci storage-integration
+        working-directory: monadb-node
+
+  node-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f monadb-node/Dockerfile -t monadb-node:ci .
+      - run: docker run --rm monadb-node:ci node -e "require('rocksdb'); require('oracledb'); require('pg'); require('@aws-sdk/client-s3'); require('@monadb/sdk')"

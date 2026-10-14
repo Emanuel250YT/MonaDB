@@ -1,0 +1,24 @@
+node_modules
+.env
+*.DS_Store
+.vscode
+
+# Hardhat
+artifacts
+cache
+coverage
+coverage.json
+
+# Keys (never commit private keys)
+.keys
+
+# Builds
+sdk/dist
+sdk/dist-test
+app/dist
+monadb-node/dist
+monadb-node/data
+
+# Local rehearsal results
+deployments/monad-localnet.json
+deployments/e2e-monad-localnet.json

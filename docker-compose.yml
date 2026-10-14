@@ -1,0 +1,125 @@
+# One replicator node + its storage:
+#   • SeaweedFS (S3 API) chunk bytes and blob shards   (CHUNK_STORE=s3, BLOB_STORE=s3)
+#   • Postgres           chunk / blob-shard metadata   (METADATA_STORE=postgres)
+#   • Oracle   (optional, profile "oracle")            the previous metadata store
+#
+#   cp monadb-node/.env.example monadb-node/.env   # contract, RPC, NODE_ENDPOINT
+#   printf '0x…' > .keys/testnet-replicator.key     # the replicator's private key
+#   docker compose up -d --build
+#
+# Oracle instead of Postgres:
+#   METADATA_STORE=oracle ORACLE_SYS_PASSWORD=... ORACLE_PASSWORD=... \
+#     docker compose --profile oracle up -d --build
+# RocksDB / local files instead of SeaweedFS: CHUNK_STORE=rocksdb BLOB_STORE=fs
+# A managed object store (R2, B2, S3, MinIO) or database: override S3_* /
+# DATABASE_URL under monadb-node.environment (or drop the s3 / postgres services).
+# (MinIO stopped publishing its community images in 2025, hence SeaweedFS.)
+#
+# Every password below defaults to a development placeholder: set real ones
+# (shell environment or a .env file next to this compose file) before
+# exposing anything. The replicator key file is mounted read-only from ./.keys.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: monadb
+      POSTGRES_DB: monadb
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-monadb-dev-password}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U monadb -d monadb"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # S3-compatible object store; one access key, written to an identities file at start.
+  # Each bucket is a SeaweedFS collection with its own volumes: 1 GiB volumes and
+  # a volume count sized from the free disk (-volume.max=0) instead of the default
+  # 8 × 30 GiB, so buckets keep getting room as they grow
+  s3:
+    image: chrislusf/seaweedfs:4.48
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-monadb-dev}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-monadb-dev-password}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+        printf '{"identities":[{"name":"monadb","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","Write","List","Tagging"]}]}'
+        "$$S3_ACCESS_KEY" "$$S3_SECRET_KEY" > /tmp/s3.json &&
+        exec weed server -dir=/data -volume.max=0 -master.volumeSizeLimitMB=1024
+        -s3 -s3.port=8333 -s3.config=/tmp/s3.json
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8333"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - s3-data:/data
+    restart: unless-stopped
+
+  oracle:
+    profiles: ["oracle"]
+    image: gvenzl/oracle-free:23-slim-faststart
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_SYS_PASSWORD:-monadb-dev-sys-password}
+      APP_USER: monadb
+      APP_USER_PASSWORD: ${ORACLE_PASSWORD:-monadb-dev-password}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+
+  monadb-node:
+    build:
+      context: .
+      dockerfile: monadb-node/Dockerfile
+    env_file: ./monadb-node/.env
+    environment:
+      CHUNK_STORE: ${CHUNK_STORE:-s3}
+      METADATA_STORE: ${METADATA_STORE:-postgres}
+      BLOB_STORE: ${BLOB_STORE:-s3}
+      # SeaweedFS (path-style URLs); the node creates the bucket at boot if missing
+      S3_ENDPOINT: http://s3:8333
+      S3_REGION: us-east-1
+      S3_FORCE_PATH_STYLE: "true"
+      S3_BUCKET: ${S3_BUCKET:-monadb}
+      S3_CREATE_BUCKET: "true"
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-monadb-dev}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-monadb-dev-password}
+      DATABASE_URL: postgres://monadb:${POSTGRES_PASSWORD:-monadb-dev-password}@postgres:5432/monadb
+      # Used with METADATA_STORE=oracle (profile "oracle")
+      ORACLE_USER: monadb
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:-monadb-dev-password}
+      ORACLE_CONNECTION_STRING: oracle:1521/FREEPDB1
+      # The volume; wins over DATA_DIR=./data from a .env copied from .env.example
+      # (./data would be /app/node/data, not writable by the node user)
+      DATA_DIR: /app/data
+      ROCKSDB_PATH: /app/data/rocksdb
+      REPLICATOR_KEY_FILE: /run/keys/replicator.key
+    depends_on:
+      postgres:
+        condition: service_healthy
+      s3:
+        condition: service_healthy
+      oracle:
+        condition: service_healthy
+        required: false # only waited for with --profile oracle
+    ports:
+      - "${NODE_PORT:-3000}:3000"
+    volumes:
+      # RocksDB / fs stores, and the blob staging area (uploads in flight)
+      - node-data:/app/data
+      - ${REPLICATOR_KEY_PATH:-./.keys/testnet-replicator.key}:/run/keys/replicator.key:ro
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  s3-data:
+  oracle-data:
+  node-data:
